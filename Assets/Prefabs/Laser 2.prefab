@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 7599626203632864794}
   - component: {fileID: 3530854541943852550}
   m_Layer: 0
-  m_Name: Laser
+  m_Name: Laser 2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -63,7 +63,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: de78780051668964198de716d1cc1364, type: 2}
+  - {fileID: 2100000, guid: cc1311f8e3671a94e9c76c24c85e6012, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -119,4 +119,4 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   speed: 25
-  laserType: 1
+  laserType: 2

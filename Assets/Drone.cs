@@ -23,7 +23,7 @@ public class Drone : MonoBehaviour
     public float firingRate = 3;
 
     private float timeOfLastFire;
-    [SerializeField] GameObject laser;
+    public GameObject laser;
     [SerializeField] GameObject drop;
 
     public int health = 1;
@@ -35,6 +35,14 @@ public class Drone : MonoBehaviour
 
     private GameObject spawnMissileSites;
 
+    private bool enemyToTarget = false;
+    Collider[] hits;
+    private Transform enemyTarget;
+
+    //Probability that an enemy will pick a drone to attack over the player
+    //Usually the player is prioritized
+    float playerPriorityThreshold = 0.37f;
+    float priorityVal = 0f;
     void Start()
     {
         spawnMissileSites = GameObject.Find("MissileSiteManager");
@@ -51,6 +59,8 @@ public class Drone : MonoBehaviour
 
         timeOfLastFire = Time.time;
 
+        priorityVal = Random.Range(0.0f, 1.0f);
+
 
     }
 
@@ -58,7 +68,7 @@ public class Drone : MonoBehaviour
     void Update()
     {
         model.transform.localPosition = new Vector3(0, Mathf.Lerp(0, 1, (Mathf.Cos(Time.time) + 1) / 2.0f), 0);
-        model.Find("Icosphere").Find("Spin").Rotate(new Vector3(0, 0, 360 * Time.deltaTime));
+        model.Find("Icosphere").Find("Spin").Rotate(new Vector3(0, 0, 720 * Time.deltaTime));
         float playerDist = Vector3.Distance(player.transform.position, transform.position);
         if (playerDist < detectionRange)
         {
@@ -68,14 +78,58 @@ public class Drone : MonoBehaviour
         {
             playerInRange = false;
         }
+        //If drones encounter enemy drones they will prioritize fighting before returning to their base
+        enemyToTarget = FindEnemiesInRange();
 
-        if (playerInRange)
+
+        //Attack enemy drones
+        /*
+         * A friendly drone will always attack an enemy drone
+         * An enemy drone will only attack a friendly drone if there is no player in range or its priority threshold is below a certain value
+         * */
+        if (enemyToTarget && ((!playerInRange || priorityVal < playerPriorityThreshold) || isFriendly))
+        {
+            navMeshAgent.SetDestination(enemyTarget.position);
+            gun.transform.LookAt(enemyTarget.transform.Find("Model").Find("Icosphere"));
+            //Always look at enemy
+            if (Vector3.Distance(transform.position, enemyTarget.position) <= stopDist)
+            {
+                Vector3 dir = new Vector3(enemyTarget.transform.position.x - transform.position.x, 0, enemyTarget.transform.position.z - transform.position.z);
+                transform.rotation = Quaternion.LookRotation(dir, Vector3.up);
+            }
+
+            if (Time.time - timeOfLastFire > firingRate)
+            {
+                timeOfLastFire = Time.time;
+                Quaternion rot = gun.transform.rotation;
+                rot = Quaternion.Euler(rot.eulerAngles.x + Random.Range(-25, 25), rot.eulerAngles.y + Random.Range(-25, 25), rot.eulerAngles.z);
+                GameObject g = Instantiate(laser, gun.transform.position, rot);
+
+            }
+
+
+        }
+
+        //Go to assigned base if there's no danger
+        if(baseToTarget >= 0 && ( (isFriendly && !enemyToTarget) || (!isFriendly && !playerInRange && !enemyToTarget) ))
+        {
+            navMeshAgent.SetDestination(spawnMissileSites.GetComponent<SpawnMissileSites>().bases[baseToTarget].Find("SecretAgent").transform.position);
+        }
+        else if(baseToTarget == -1 && isFriendly && !enemyToTarget)
+        {
+            navMeshAgent.SetDestination(player.transform.position);
+        }
+
+        //A player in range of the enemy is prioritized above everything else
+        if (playerInRange && !isFriendly && (!enemyToTarget || priorityVal >= playerPriorityThreshold))
         {
             if (baseToTarget != -2)
             {
                 navMeshAgent.SetDestination(player.transform.position);
+                gun.transform.LookAt(player.transform);
             }
-            gun.transform.LookAt(player.transform);
+            
+            //Make sure drone always faces player
             if(playerDist <= stopDist)
             {
                 Vector3 dir = new Vector3(player.transform.position.x - transform.position.x, 0, player.transform.position.z - transform.position.z);
@@ -85,8 +139,11 @@ public class Drone : MonoBehaviour
             if(Time.time - timeOfLastFire > firingRate)
             {
                 timeOfLastFire = Time.time;
-                GameObject g = Instantiate(laser, gun.transform.position, gun.transform.rotation);
-                g.GetComponent<Laser>().laserType = 1;
+                Quaternion rot = gun.transform.rotation;
+                rot = Quaternion.Euler(rot.eulerAngles.x + Random.Range(-12, 12), rot.eulerAngles.y + Random.Range(-12, 12), rot.eulerAngles.z);
+                GameObject g = Instantiate(laser, gun.transform.position, rot);
+
+                
             }
         }
 
@@ -99,5 +156,30 @@ public class Drone : MonoBehaviour
         }
 
 
+    }
+
+    bool FindEnemiesInRange()
+    {
+        //Check colliders in vicinity for drones
+        hits = Physics.OverlapSphere(transform.position, detectionRange);
+        bool returnVal = false;
+        float maxDist = float.MaxValue;
+        for(int i = 0; i < hits.Length; i++)
+        {
+            //Check if enemy
+            if(hits[i].tag == "Drone" && hits[i].transform.parent.GetComponent<Drone>().isFriendly == !isFriendly)
+            {
+                returnVal = true;
+                //Prioritize closest enemy to fight
+                float d = Vector3.Distance(transform.position, hits[i].transform.parent.position);
+                if (d < maxDist && enemyTarget == null)
+                {
+                    maxDist = d;
+                    enemyTarget = hits[i].transform.parent;
+                }
+            }
+        }
+
+        return returnVal;
     }
 }
