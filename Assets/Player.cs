@@ -30,6 +30,11 @@ public class Player : MonoBehaviour
     void Update()
     {
         healthTxt.text = "Player Health: " + health.ToString();
+        if(health <= 0)
+        {
+            healthTxt.text = "Game Over!";
+            transform.GetComponent<FPSController>().canMove = false;
+        }
         wealthTxt.text = "Metal Scraps: " + scraps.ToString();
         strengthTxt.text = "Firing Rate: " + firingRate.ToString() + "/s";
 
@@ -46,11 +51,12 @@ public class Player : MonoBehaviour
         
         if(GetComponent<FPSController>().canMove && Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hit))
         {
-            if(hit.transform.tag == "Lever")
+            if(hit.transform.tag == "Lever" && scraps > 4)
             {
                 if (Input.GetMouseButtonDown(1))
                 {
                     spawner.GetComponent<SpawnFriendlyDrones>().SpawnDrone();
+                    scraps -= 4;
                 }
             }
             if(hit.transform.tag == "Drone" && Input.GetMouseButtonDown(1) && hit.transform.parent.GetComponent<Drone>().isFriendly)

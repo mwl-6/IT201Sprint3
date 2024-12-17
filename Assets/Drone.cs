@@ -67,6 +67,14 @@ public class Drone : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        //Random bug where drones spawn too high up so they don't register as a navmeshagent
+        if(GetComponent<NavMeshAgent>() == null)
+        {
+            Debug.Log("Bad Drone");
+            spawnMissileSites.GetComponent<SpawnMissileSites>().RemoveID(transform.gameObject.GetInstanceID());
+            Destroy(gameObject);
+        }
+
         model.transform.localPosition = new Vector3(0, Mathf.Lerp(0, 1, (Mathf.Cos(Time.time) + 1) / 2.0f), 0);
         model.Find("Icosphere").Find("Spin").Rotate(new Vector3(0, 0, 720 * Time.deltaTime));
         float playerDist = Vector3.Distance(player.transform.position, transform.position);
@@ -102,7 +110,7 @@ public class Drone : MonoBehaviour
             {
                 timeOfLastFire = Time.time;
                 Quaternion rot = gun.transform.rotation;
-                rot = Quaternion.Euler(rot.eulerAngles.x + Random.Range(-25, 25), rot.eulerAngles.y + Random.Range(-25, 25), rot.eulerAngles.z);
+                rot = Quaternion.Euler(rot.eulerAngles.x + Random.Range(-4, 4), rot.eulerAngles.y + Random.Range(-4, 4), rot.eulerAngles.z);
                 GameObject g = Instantiate(laser, gun.transform.position, rot);
 
             }
@@ -113,6 +121,7 @@ public class Drone : MonoBehaviour
         //Go to assigned base if there's no danger
         if(baseToTarget >= 0 && ( (isFriendly && !enemyToTarget) || (!isFriendly && !playerInRange && !enemyToTarget) ))
         {
+
             navMeshAgent.SetDestination(spawnMissileSites.GetComponent<SpawnMissileSites>().bases[baseToTarget].Find("SecretAgent").transform.position);
         }
         else if(baseToTarget == -1 && isFriendly && !enemyToTarget)
@@ -140,7 +149,7 @@ public class Drone : MonoBehaviour
             {
                 timeOfLastFire = Time.time;
                 Quaternion rot = gun.transform.rotation;
-                rot = Quaternion.Euler(rot.eulerAngles.x + Random.Range(-12, 12), rot.eulerAngles.y + Random.Range(-12, 12), rot.eulerAngles.z);
+                rot = Quaternion.Euler(rot.eulerAngles.x + Random.Range(-2, 2), rot.eulerAngles.y + Random.Range(-2, 2), rot.eulerAngles.z);
                 GameObject g = Instantiate(laser, gun.transform.position, rot);
 
                 

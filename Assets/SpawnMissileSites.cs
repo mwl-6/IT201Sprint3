@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.AI;
 
 public class SpawnMissileSites : MonoBehaviour
 {
@@ -54,10 +55,16 @@ public class SpawnMissileSites : MonoBehaviour
                     spawnLoc = g.transform.position + new Vector3(Random.Range(-20, 20), 0, Random.Range(-20, 20));
                 }
 
-                //Make sure the drone is close enough to the ground or it may not become a navmeshagent
-                RaycastHit r;
-                Physics.Raycast(spawnLoc, Vector3.down, out r);
-                spawnLoc = new Vector3(spawnLoc.x, r.point.y + 2.0f, spawnLoc.z);
+                //Find a location that places the drone on the navmesh
+                //RaycastHit r;
+                //Physics.Raycast(spawnLoc, Vector3.down, out r);
+                //spawnLoc = new Vector3(spawnLoc.x, r.point.y + 2.0f, spawnLoc.z);
+
+                NavMeshHit hit;
+                if (NavMesh.SamplePosition(spawnLoc, out hit, 20.0f, NavMesh.AllAreas))
+                {
+                    spawnLoc = hit.position;
+                }
 
                 //Make the drone and add it to the occupying list
                 GameObject d = Instantiate(enemy, spawnLoc, Quaternion.identity);
