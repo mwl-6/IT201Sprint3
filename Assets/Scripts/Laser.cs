@@ -86,7 +86,49 @@ public class Laser : MonoBehaviour
     //Get rid of laser if it hits a building or terrain
     private void OnTriggerEnter(Collider other)
     {
-        if(other.transform.tag != "Drone" && other.transform.tag != "Player" && other.gameObject.GetComponent<MissileLauncher>() == null)
+        if (other.transform.tag == "Drone" && (laserType == 0 || laserType == 2))
+        {
+            Debug.Log("Hit");
+            //Hurt enemy
+            if (!other.transform.parent.GetComponent<Drone>().isFriendly)
+            {
+                other.transform.parent.GetComponent<Drone>().health--;
+                Destroy(gameObject);
+            }
+            else
+            {
+                //Don't hurt allies
+                Destroy(gameObject);
+            }
+        }
+
+        //Drone Hits Player
+        if (other.transform.tag == "Player" && (laserType == 1 || laserType == 2))
+        {
+            //Enemy Drone takes health away
+            if (laserType == 1)
+            {
+                other.transform.GetComponent<Player>().health--;
+            }
+            Destroy(gameObject);
+        }
+
+        //Enemy drone hits drone
+        if (other.transform.tag == "Drone" && laserType == 1)
+        {
+            //Friendly drones get hurt
+            if (other.transform.parent.GetComponent<Drone>().isFriendly)
+            {
+                other.transform.parent.GetComponent<Drone>().health--;
+                Destroy(gameObject);
+            }
+            else
+            {
+                //Dont hurt allies
+                Destroy(gameObject);
+            }
+        }
+        if (other.transform.tag != "Drone" && other.transform.tag != "Player" && other.gameObject.GetComponent<MissileLauncher>() == null)
         {
             Destroy(gameObject);
         }

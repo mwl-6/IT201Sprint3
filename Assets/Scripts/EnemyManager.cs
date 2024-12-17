@@ -211,6 +211,10 @@ public class EnemyManager : MonoBehaviour
     void MakeDecision()
     {
         int facility = Random.Range(0, 4);
+        if (everythingDestroyed)
+        {
+            return;
+        }
         while(destroyed[facility] == 1)
         {
             facility = Random.Range(0, 4);

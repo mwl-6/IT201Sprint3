@@ -51,7 +51,7 @@ public class Player : MonoBehaviour
         
         if(GetComponent<FPSController>().canMove && Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hit))
         {
-            if(hit.transform.tag == "Lever" && scraps > 4)
+            if(hit.transform.tag == "Lever" && scraps >= 4)
             {
                 if (Input.GetMouseButtonDown(1))
                 {
