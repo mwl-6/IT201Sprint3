@@ -28,8 +28,16 @@ public class Drone : MonoBehaviour
 
     public int health = 1;
     public bool isFriendly = false;
+
+    //-2 = do nothing, -1 - stick with player, anything else is a base
+    //This applies to enemy drones too
+    public int baseToTarget = -1;
+
+    private GameObject spawnMissileSites;
+
     void Start()
     {
+        spawnMissileSites = GameObject.Find("MissileSiteManager");
         player = GameObject.FindGameObjectWithTag("Player");
         navMeshAgent = GetComponent<NavMeshAgent>();
 
@@ -42,13 +50,15 @@ public class Drone : MonoBehaviour
         ignoreRange = detectionRange*1.5f;
 
         timeOfLastFire = Time.time;
+
+
     }
 
     // Update is called once per frame
     void Update()
     {
         model.transform.localPosition = new Vector3(0, Mathf.Lerp(0, 1, (Mathf.Cos(Time.time) + 1) / 2.0f), 0);
-        model.Find("Icosphere").Find("Spin").Rotate(new Vector3(0, 0, 2 * Time.deltaTime));
+        model.Find("Icosphere").Find("Spin").Rotate(new Vector3(0, 0, 360 * Time.deltaTime));
         float playerDist = Vector3.Distance(player.transform.position, transform.position);
         if (playerDist < detectionRange)
         {
@@ -61,7 +71,10 @@ public class Drone : MonoBehaviour
 
         if (playerInRange)
         {
-            navMeshAgent.SetDestination(player.transform.position);
+            if (baseToTarget != -2)
+            {
+                navMeshAgent.SetDestination(player.transform.position);
+            }
             gun.transform.LookAt(player.transform);
             if(playerDist <= stopDist)
             {
@@ -81,6 +94,7 @@ public class Drone : MonoBehaviour
         {
             Instantiate(drop, model.transform.position + new Vector3(0, 3, 0), Quaternion.identity);
             Instantiate(drop, model.transform.position + new Vector3(0, 3, 0), Quaternion.identity);
+            spawnMissileSites.GetComponent<SpawnMissileSites>().RemoveID(transform.gameObject.GetInstanceID());
             Destroy(gameObject);
         }
 

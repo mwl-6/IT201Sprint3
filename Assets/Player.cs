@@ -20,7 +20,7 @@ public class Player : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if(Input.GetMouseButton(0) && Time.time - timeOfFire > firingRate)
+        if(Input.GetMouseButton(0) && Time.time - timeOfFire > firingRate && GetComponent<FPSController>().canMove)
         {
             timeOfFire = Time.time;
             GameObject g = Instantiate(laser, Camera.main.transform.position, Camera.main.transform.rotation);
