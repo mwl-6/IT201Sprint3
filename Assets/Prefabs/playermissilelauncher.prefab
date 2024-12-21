@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4779437968482864919}
   - component: {fileID: 6672680963279874173}
-  m_Layer: 7
+  m_Layer: 0
   m_Name: Collider
   m_TagString: MissileLauncher
   m_Icon: {fileID: 0}

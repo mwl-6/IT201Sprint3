@@ -43,6 +43,13 @@ public class Drone : MonoBehaviour
     //Usually the player is prioritized
     float playerPriorityThreshold = 0.37f;
     float priorityVal = 0f;
+
+
+    public bool dodging = false;
+    public float timeOfDodge = 0.0f;
+    int dodgeDir = 1;
+
+    float offsetValue = 0f;
     void Start()
     {
         spawnMissileSites = GameObject.Find("MissileSiteManager");
@@ -60,6 +67,7 @@ public class Drone : MonoBehaviour
         timeOfLastFire = Time.time;
 
         priorityVal = Random.Range(0.0f, 1.0f);
+        GetComponent<Animator>().SetFloat("offset", Random.Range(0.0f, 1.0f));
 
 
     }
@@ -111,7 +119,7 @@ public class Drone : MonoBehaviour
                 timeOfLastFire = Time.time;
                 Quaternion rot = gun.transform.rotation;
                 rot = Quaternion.Euler(rot.eulerAngles.x + Random.Range(-4, 4), rot.eulerAngles.y + Random.Range(-4, 4), rot.eulerAngles.z);
-                GameObject g = Instantiate(laser, gun.transform.position, rot);
+                GameObject g = Instantiate(laser, gun.transform.position - new Vector3(offsetValue * dodgeDir, 0, 0), rot);
 
             }
 
@@ -150,7 +158,7 @@ public class Drone : MonoBehaviour
                 timeOfLastFire = Time.time;
                 Quaternion rot = gun.transform.rotation;
                 rot = Quaternion.Euler(rot.eulerAngles.x + Random.Range(-2, 2), rot.eulerAngles.y + Random.Range(-2, 2), rot.eulerAngles.z);
-                GameObject g = Instantiate(laser, gun.transform.position, rot);
+                GameObject g = Instantiate(laser, gun.transform.position - new Vector3(offsetValue * dodgeDir, 0, 0), rot);
 
                 
             }
@@ -165,6 +173,39 @@ public class Drone : MonoBehaviour
         }
 
 
+        //Dodging lasers
+        if (dodging)
+        {
+            
+            if(Time.time-timeOfDodge < 0.5f)
+            {
+                offsetValue += 5.0f * Time.deltaTime;
+                model.transform.localPosition = new Vector3(offsetValue * dodgeDir, Mathf.Lerp(0, 1, (Mathf.Cos(Time.time) + 1) / 2.0f), 0);
+
+            }
+            else if(Time.time-timeOfDodge >= 1.0f && Time.time - timeOfDodge < 1.5f)
+            {
+                offsetValue -= 5.0f * Time.deltaTime;
+                model.transform.localPosition = new Vector3(offsetValue * dodgeDir, Mathf.Lerp(0, 1, (Mathf.Cos(Time.time) + 1) / 2.0f), 0);
+
+            }
+            else if(Time.time - timeOfDodge >= 1.5f)
+            {
+                model.transform.localPosition = new Vector3(0, Mathf.Lerp(0, 1, (Mathf.Cos(Time.time) + 1) / 2.0f), 0);
+                dodging = false;
+                
+                dodgeDir = Mathf.RoundToInt(Random.value);
+                if (dodgeDir == 0)
+                    dodgeDir = -1;
+                
+                offsetValue = 0;
+            }
+            else
+            {
+                model.transform.localPosition = new Vector3(offsetValue * dodgeDir, Mathf.Lerp(0, 1, (Mathf.Cos(Time.time) + 1) / 2.0f), 0);
+            }
+            
+        }
     }
 
     bool FindEnemiesInRange()

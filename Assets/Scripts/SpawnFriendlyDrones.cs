@@ -14,6 +14,8 @@ public class SpawnFriendlyDrones : MonoBehaviour
 
     [SerializeField] private Material greenEye;
     [SerializeField] private Material clearEye;
+
+    [SerializeField] private GameObject droneHolder;
     void Start()
     {
         timeOfLastSpawn = Time.time;
@@ -31,7 +33,7 @@ public class SpawnFriendlyDrones : MonoBehaviour
         {
             Debug.Log("Spawned Drone");
             timeOfLastSpawn = Time.time;
-            GameObject d = Instantiate(drone, spawnLoc + new Vector3(Random.Range(-5, 5), 0, Random.Range(-5, 5)), Quaternion.identity);
+            GameObject d = Instantiate(drone, spawnLoc + new Vector3(Random.Range(-5, 5), 0, Random.Range(-5, 5)), Quaternion.identity, droneHolder.transform);
             d.transform.GetComponent<Drone>().baseToTarget = -2;
             d.transform.GetComponent<Drone>().isFriendly = true;
             d.transform.GetComponent<Drone>().laser = laser;

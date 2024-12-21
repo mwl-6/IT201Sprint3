@@ -886,10 +886,10 @@ BoxCollider:
   m_Material: {fileID: 0}
   m_IncludeLayers:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 1
   m_ExcludeLayers:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 64
   m_LayerOverridePriority: 0
   m_IsTrigger: 1
   m_ProvidesContacts: 0
@@ -1308,6 +1308,7 @@ GameObject:
   - component: {fileID: 1202919184658969071}
   - component: {fileID: 3397413667385111276}
   - component: {fileID: 8260440771627231855}
+  - component: {fileID: 6742151923763962692}
   m_Layer: 0
   m_Name: DroneV2
   m_TagString: Drone
@@ -1349,9 +1350,11 @@ MonoBehaviour:
   firingRate: 1.5
   laser: {fileID: 583952029782195623, guid: 2ab0083fc8899194fb1a70d6c9b1857f, type: 3}
   drop: {fileID: 8205760052897863063, guid: 23070f00e9f2c36438b296c7e4b60cf6, type: 3}
-  health: 1
+  health: 2
   isFriendly: 0
   baseToTarget: -2
+  dodging: 0
+  timeOfDodge: 0
 --- !u!195 &8260440771627231855
 NavMeshAgent:
   m_ObjectHideFlags: 0
@@ -1374,6 +1377,27 @@ NavMeshAgent:
   m_BaseOffset: 0
   m_WalkableMask: 4294967295
   m_ObstacleAvoidanceType: 4
+--- !u!95 &6742151923763962692
+Animator:
+  serializedVersion: 5
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5994122987814820641}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: a975c7821d36a4d4dae5430f93fb3f3e, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!1 &6176839800656948772
 GameObject:
   m_ObjectHideFlags: 0

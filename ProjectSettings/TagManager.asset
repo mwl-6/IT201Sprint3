@@ -13,6 +13,7 @@ TagManager:
   - Production
   - LargeMissileLauncher
   - Test
+  - Scrap
   layers:
   - Default
   - TransparentFX

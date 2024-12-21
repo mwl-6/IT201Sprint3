@@ -11,69 +11,50 @@ public class Laser : MonoBehaviour
 
     private float timeOfStart;
 
+    Vector3 previousPosition;
+    public LayerMask layersToIgnore;
+
     void Start()
     {
         timeOfStart = Time.time;
+        previousPosition = transform.position;
     }
 
     // Update is called once per frame
     void Update()
     {
-        Vector3 newPos = transform.forward * speed * Time.deltaTime + transform.position;
-        Vector3 oldPos = transform.position;
+        previousPosition = transform.position;
+        transform.Translate(Vector3.forward * speed * Time.deltaTime);
         //I use raycasting instead of triggerenter for continuous collision
+
         RaycastHit hit;
         //Debug.DrawLine(oldPos - transform.forward * transform.localScale.z / 2.0f, newPos + transform.forward * transform.localScale.z / 2.0f);
         //Debug.DrawLine(oldPos - transform.forward * transform.localScale.z / 2.0f, oldPos + transform.up * speed * Time.deltaTime);
         //Debug.DrawRay(oldPos, transform.forward, Color.red);
-        if(Physics.Linecast(transform.position - transform.forward * transform.localScale.z / 2.0f, newPos + transform.forward * transform.localScale.z / 2.0f, out hit))
+        if(Physics.Linecast(previousPosition, transform.position, out hit, ~layersToIgnore))
         {
-            //Player or friendly drone hits drone
-            if(hit.transform.tag == "Drone" && (laserType == 0 || laserType == 2))
+            if (hit.collider != null)
             {
-                Debug.Log("Hit");
-                //Hurt enemy
-                if (!hit.transform.parent.GetComponent<Drone>().isFriendly)
-                {
-                    hit.transform.parent.GetComponent<Drone>().health--;
-                    Destroy(gameObject);
-                }
-                else
-                {
-                    //Don't hurt allies
-                    Destroy(gameObject);
-                }
+                Collider col = hit.collider;
+                ProcessCollision(col);
             }
+        }
 
-            //Drone Hits Player
-            if (hit.transform.tag == "Player" && (laserType == 1 || laserType == 2))
+        //If a laser WILL hit the drone in the future, warn the drone to give them the chance to dodge
+        Debug.DrawRay(previousPosition, transform.position - previousPosition);
+        RaycastHit futureHit;
+        if(Physics.Raycast(transform.position, transform.position - previousPosition, out futureHit))
+        {
+            if(futureHit.transform.tag == "Drone" && !futureHit.transform.parent.GetComponent<Drone>().dodging)
             {
-                //Enemy Drone takes health away
-                if (laserType == 1)
+                if ((futureHit.transform.parent.GetComponent<Drone>().isFriendly && laserType == 1) || (!futureHit.transform.parent.GetComponent<Drone>().isFriendly && laserType != 1))
                 {
-                    hit.transform.GetComponent<Player>().health--;
-                }
-                Destroy(gameObject);
-            }
-
-            //Enemy drone hits drone
-            if (hit.transform.tag == "Drone" && laserType == 1)
-            {
-                //Friendly drones get hurt
-                if (hit.transform.parent.GetComponent<Drone>().isFriendly)
-                {
-                    hit.transform.parent.GetComponent<Drone>().health--;
-                    Destroy(gameObject);
-                }
-                else
-                {
-                    //Dont hurt allies
-                    Destroy(gameObject);
+                    futureHit.transform.parent.GetComponent<Drone>().dodging = true;
+                    futureHit.transform.parent.GetComponent<Drone>().timeOfDodge = Time.time;
                 }
             }
         }
 
-        transform.position = newPos;
 
         //Destroy after 10 seconds
         if(Time.time - timeOfStart > 10)
@@ -82,17 +63,21 @@ public class Laser : MonoBehaviour
         }
     }
 
-
-    //Get rid of laser if it hits a building or terrain
-    private void OnTriggerEnter(Collider other)
+    /*
+     * Handle collisions detected through either triggerenter or raycasting
+     * */
+    private void ProcessCollision(Collider hit)
     {
-        if (other.transform.tag == "Drone" && (laserType == 0 || laserType == 2))
+        Debug.Log(hit.name);
+        //Player or friendly drone hits drone
+        if (hit.transform.tag == "Drone" && (laserType == 0 || laserType == 2))
         {
             Debug.Log("Hit");
             //Hurt enemy
-            if (!other.transform.parent.GetComponent<Drone>().isFriendly)
+            if (!hit.transform.parent.GetComponent<Drone>().isFriendly)
             {
-                other.transform.parent.GetComponent<Drone>().health--;
+                hit.transform.parent.GetComponent<Drone>().health--;
+                hit.transform.parent.gameObject.GetComponent<Animator>().SetTrigger("shot");
                 Destroy(gameObject);
             }
             else
@@ -103,23 +88,24 @@ public class Laser : MonoBehaviour
         }
 
         //Drone Hits Player
-        if (other.transform.tag == "Player" && (laserType == 1 || laserType == 2))
+        if (hit.transform.tag == "Player" && (laserType == 1 || laserType == 2))
         {
             //Enemy Drone takes health away
             if (laserType == 1)
             {
-                other.transform.GetComponent<Player>().health--;
+                hit.transform.GetComponent<Player>().health--;
             }
             Destroy(gameObject);
         }
 
         //Enemy drone hits drone
-        if (other.transform.tag == "Drone" && laserType == 1)
+        if (hit.transform.tag == "Drone" && laserType == 1)
         {
             //Friendly drones get hurt
-            if (other.transform.parent.GetComponent<Drone>().isFriendly)
+            if (hit.transform.parent.GetComponent<Drone>().isFriendly)
             {
-                other.transform.parent.GetComponent<Drone>().health--;
+                hit.transform.parent.GetComponent<Drone>().health--;
+                hit.transform.parent.gameObject.GetComponent<Animator>().SetTrigger("shot");
                 Destroy(gameObject);
             }
             else
@@ -128,7 +114,16 @@ public class Laser : MonoBehaviour
                 Destroy(gameObject);
             }
         }
-        if (other.transform.tag != "Drone" && other.transform.tag != "Player" && other.gameObject.GetComponent<MissileLauncher>() == null)
+
+        if(hit.gameObject.tag != "Player" && laserType == 0 && !(hit.gameObject.layer == 7))
+            Destroy(gameObject);
+    }
+
+    //Get rid of laser if it hits a building or terrain
+    private void OnTriggerEnter(Collider other)
+    {
+        //ProcessCollision(other);
+        if (other.transform.tag != "scrap" && other.transform.tag != "Drone" && other.transform.tag != "Player" && other.gameObject.GetComponent<MissileLauncher>() == null && other.gameObject.layer != 7)
         {
             Destroy(gameObject);
         }
